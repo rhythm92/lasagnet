@@ -33,7 +33,8 @@ def build_net(input_shape, lr=0.01, mom=0.9, bs=128):
                              name         = 'conv1',
                              num_filters  = 16,
                              filter_size  = (5,5),
-                             stride       = 1, 
+                             stride       = 1,
+                             pad          = 'same',
                              nonlinearity = lfcn.tanh,
                              W            = li.GlorotUniform()
                              )
@@ -41,11 +42,19 @@ def build_net(input_shape, lr=0.01, mom=0.9, bs=128):
                              name         = 'dropout1', 
                              p            = 0.5
                              )
-    knet = ll.DenseLayer    (knet,
+    knet = ll.Conv2DLayer   (knet,
                              name         = 'classify',
-                             num_units    = np.prod(input_shape),
-                             nonlinearity = lfcn.sigmoid
+                             num_filters  = 1,
+                             filter_size  = (5,5),
+                             stride       = 1,
+                             pad          = 'same', 
+                             nonlinearity = lfcn.sigmoid,
+                             W            = li.GlorotUniform()
                              )
+    knet = ll.FlattenLayer   (knet,
+                              name        = 'reshape',
+                              outdim      = 1
+                              )
     return knet
     
   def define_fcns(net, x, y):
@@ -109,8 +118,8 @@ def train_net(xtrain, ytrain, xvalid, yvalid,
 
 def define_hypers():
   # should be made .cfg file
-  learning_rate = 0.1
-  n_epochs      = 10
+  learning_rate = 10
+  n_epochs      = 50
   batch_size    = 16L
   img_size      = (128L,224L,256L)
   return learning_rate, n_epochs, batch_size, img_size
@@ -134,7 +143,6 @@ knet, output, params, train_fcn, valid_fcn = build_net(input_size)
 train_net(xtrain, ytrain, xvalid, yvalid, knet, train_fcn, valid_fcn, 
           lr=learning_rate, ne=n_epochs, bs=batch_size)
 
-print("DONE")
 
 
 
